@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.twork.dao.FriendGroupMapper">
+  <resultMap id="BaseResultMap" type="com.twork.pojo.FriendGroup">
+    <id column="uid" jdbcType="INTEGER" property="uid" />
+    <id column="id" jdbcType="SMALLINT" property="id" />
+    <result column="name" jdbcType="CHAR" property="name" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    delete from `friend_group`
+    where `uid` = #{uid,jdbcType=INTEGER}
+      and `id` = #{id,jdbcType=SMALLINT}
+  </delete>
+  <insert id="insert" parameterType="com.twork.pojo.FriendGroup">
+    insert into `friend_group` (`uid`, `id`, `name`)
+    values (#{uid,jdbcType=INTEGER}, #{id,jdbcType=SMALLINT}, #{name,jdbcType=CHAR})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.twork.pojo.FriendGroup">
+    update `friend_group`
+    set `name` = #{name,jdbcType=CHAR}
+    where `uid` = #{uid,jdbcType=INTEGER}
+      and `id` = #{id,jdbcType=SMALLINT}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="map" resultMap="BaseResultMap">
+    select `uid`, `id`, `name`
+    from `friend_group`
+    where `uid` = #{uid,jdbcType=INTEGER}
+      and `id` = #{id,jdbcType=SMALLINT}
+  </select>
+  <select id="selectByName" parameterType="map" resultMap="BaseResultMap">
+    select `uid`, `id`, `name`
+    from `friend_group`
+    where `uid` = #{uid,jdbcType=INTEGER}
+    and `name` = #{name,jdbcType=CHAR}
+  </select>
+  <select id="selectById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select `uid`, `id`, `name`
+    from `friend_group`
+    where `uid` = #{uid,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select `uid`, `id`, `name`
+    from `friend_group`
+  </select>
+  <select id="getLastFriendGroupId" parameterType="java.lang.Integer" resultType="java.lang.Short">
+    select `id` from `friend_group` where `uid` = #{uid,jdbcType=INTEGER} order by `id` desc limit 1
+  </select>
+</mapper>

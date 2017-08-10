@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.twork.dao.GroupMapper">
+  <resultMap id="BaseResultMap" type="com.twork.pojo.Group">
+    <id column="gid" jdbcType="INTEGER" property="gid" />
+    <result column="name" jdbcType="CHAR" property="name" />
+    <result column="uid" jdbcType="INTEGER" property="uid" />
+    <result column="datetime" jdbcType="TIMESTAMP" property="datetime" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from `group`
+    where `gid` = #{gid,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.twork.pojo.Group">
+    insert into `group` (`gid`, `name`, `uid`
+    <if test="datetime != null">, `datetime`</if>
+    )
+    values (#{gid,jdbcType=INTEGER}, #{name,jdbcType=CHAR}, #{uid,jdbcType=INTEGER}
+    <if test="datetime != null">, #{datetime,jdbcType=TIMESTAMP}</if>
+    )
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.twork.pojo.Group">
+    update `group`
+    set `name` = #{name,jdbcType=CHAR},
+      `uid` = #{uid,jdbcType=INTEGER},
+      `datetime` = #{datetime,jdbcType=TIMESTAMP}
+    where `gid` = #{gid,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select `gid`, `name`, `uid`, `datetime`
+    from `group`
+    where `gid` = #{gid,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select `gid`, `name`, `uid`, `datetime`
+    from `group`
+  </select>
+  <select id="listGroup" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select `gid`, `name`, `uid`, `datetime`
+    from `group`
+    where `gid` in (select `gid` from `member` where `uid` = #{uid,jdbcType=INTEGER})
+  </select>
+  <select id="getLastGid" resultType="java.lang.Integer">
+    select `gid` from `group` order by `gid` desc limit 1
+  </select>
+</mapper>

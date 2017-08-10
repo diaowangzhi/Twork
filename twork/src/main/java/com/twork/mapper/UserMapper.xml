@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.twork.dao.UserMapper">
+  <resultMap id="BaseResultMap" type="com.twork.pojo.User">
+    <id column="uid" jdbcType="INTEGER" property="uid" />
+    <result column="name" jdbcType="CHAR" property="name" />
+    <result column="email" jdbcType="CHAR" property="email" />
+    <result column="status" jdbcType="BIT" property="status" />
+    <result column="level" jdbcType="INTEGER" property="level" />
+    <result column="datetime" jdbcType="TIMESTAMP" property="datetime" />
+    <result column="lastonlinedatetime" property="lastonlinedatetime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from `user`
+    where `uid` = #{uid,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.twork.pojo.User">
+    insert into `user` (`uid`, `name`
+    <if test="email != null">, `email`</if>
+    <if test="status != null">, `status`</if>
+    <if test="level != null">, `level`</if>
+    <if test="datetime != null">, `datetime`</if>
+    <if test="lastonlinedatetime != null">, `lastonlinedatetime`</if>
+    )
+    values (#{uid,jdbcType=INTEGER}, #{name,jdbcType=CHAR}
+    <if test="email != null">, #{email,jdbcType=CHAR}</if>
+    <if test="status != null">, #{status,jdbcType=BIT}</if>
+    <if test="level != null">, #{level,jdbcType=INTEGER}</if>
+    <if test="datetime != null">, #{datetime,jdbcType=TIMESTAMP}</if>
+    <if test="lastonlinedatetime != null">, #{lastonlinedatetime,jdbcType=TIMESTAMP}</if>
+    )
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.twork.pojo.User">
+    update `user`
+    set `name` = #{name,jdbcType=CHAR},
+      `email` = #{email,jdbcType=CHAR},
+      `status` = #{status,jdbcType=BIT},
+      `level` = #{level,jdbcType=INTEGER},
+      `datetime` = #{datetime,jdbcType=TIMESTAMP},
+      `lastonlinedatetime` = #{lastonlinedatetime,jdbcType=TIMESTAMP}
+    where `uid` = #{uid,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select `uid`, `name`, `email`, `status`, `level`, `datetime`, `lastonlinedatetime`
+    from `user`
+    where `uid` = #{uid,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select `uid`, `name`, `email`, `status`, `level`, `datetime`, `lastonlinedatetime`
+    from `user`
+  </select>
+  <select id="listNonCheckedUser" resultMap="BaseResultMap">
+    select `uid`, `name`, `email`, `status`, `level`, `datetime`, `lastonlinedatetime`
+    from `user`
+    where `level` = 1
+  </select>
+  <select id="listGroupUser" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select `uid`, `name`, `email`, `status`, `level`, `datetime`, `lastonlinedatetime`
+    from `user`
+    where `uid` in (select `uid` from `member` where `gid` = #{gid,jdbcType=INTEGER})
+  </select>
+  <select id="listFriendGroupUser" parameterType="map" resultMap="BaseResultMap">
+    select `uid`, `name`, `email`, `status`, `level`, `datetime`, `lastonlinedatetime`
+    from `user`
+    where `uid` in (
+      select `fid` from `friend` where `uid` = #{uid,jdbcType=INTEGER} and `id` in (
+        select `id` from friend_group where `uid` = #{uid,jdbcType=INTEGER} and `name` = #{name,jdbcType=CHAR}));
+  </select>
+  <select id="countUser" resultType="java.lang.Integer">
+    select count(`uid`) from `user`
+  </select>
+  <select id="countAvailableUser" resultType="java.lang.Integer">
+    select count(`uid`) from `user` where `level` != -1
+  </select>
+  <select id="getLastUid" resultType="java.lang.Integer">
+    select `uid` from `user` order by `uid` desc limit 1
+  </select>
+  <select id="selectByUidOrName" resultMap="BaseResultMap" parameterType="java.lang.String">
+    select `uid`, `name`, `email`, `status`, `level`, `datetime`, `lastonlinedatetime`
+    from `user`
+    where `uid` like CONCAT(CONCAT('%', #{userinfo,jdbcType=CHAR}),'%') or `name` like CONCAT(CONCAT('%', #{userinfo,jdbcType=CHAR}),'%')
+  </select>
+</mapper>

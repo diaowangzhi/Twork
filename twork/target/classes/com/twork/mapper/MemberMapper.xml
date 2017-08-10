@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.twork.dao.MemberMapper">
+  <resultMap id="BaseResultMap" type="com.twork.pojo.Member">
+    <id column="gid" jdbcType="INTEGER" property="gid" />
+    <id column="uid" jdbcType="INTEGER" property="uid" />
+    <result column="ban" jdbcType="BIT" property="ban" />
+    <result column="shield" jdbcType="BIT" property="shield" />
+    <result column="datetime" jdbcType="TIMESTAMP" property="datetime" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    delete from `member`
+    where `gid` = #{gid,jdbcType=INTEGER}
+      and `uid` = #{uid,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByGid" parameterType="map">
+    delete from `member`
+    where `gid` = #{gid,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.twork.pojo.Member">
+    insert into `member` (`gid`, `uid`
+    <if test="ban != null">, `ban`</if>
+    <if test="shield != null">, `shield`</if>
+    <if test="datetime != null">, `datetime`</if>
+    )
+    values (#{gid,jdbcType=INTEGER}, #{uid,jdbcType=INTEGER}
+    <if test="ban != null">, #{ban,jdbcType=BIT}</if>
+    <if test="shield != null">, #{shield,jdbcType=BIT}</if>
+    <if test="datetime != null">, #{datetime,jdbcType=TIMESTAMP}</if>
+    )
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.twork.pojo.Member">
+    update `member`
+    set `ban` = #{ban,jdbcType=BIT},
+      `shield` = #{shield,jdbcType=BIT},
+      `datetime` = #{datetime,jdbcType=TIMESTAMP}
+    where `gid` = #{gid,jdbcType=INTEGER}
+      and `uid` = #{uid,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="map" resultMap="BaseResultMap">
+    select `gid`, `uid`, `ban`, `shield`, `datetime`
+    from `member`
+    where `gid` = #{gid,jdbcType=INTEGER}
+      and `uid` = #{uid,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select `gid`, `uid`, `ban`, `shield`, `datetime`
+    from `member`
+  </select>
+  <select id="selectByGid" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select `gid`, `uid`, `ban`, `shield`, `datetime`
+    from `member`
+    where `gid` = #{gid,jdbcType=INTEGER}
+  </select>
+</mapper>

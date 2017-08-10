@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>bootstrap-treeview</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <script type="text/javascript">
+        $(function () {
+            BindEvent();
+            //页面加载
+            //渲染树
+            function init(tree) {
+                $('#left-tree').treeview({
+                    data: tree,
+                    levels: 1,
+                    onNodeSelected: function (event, node) {
+                        if (node.fid) {
+                            $('#groupName').val(node.text);
+                            $('#groupaccount').val(node.fid);
+                        }
+                    },
+                    showCheckbox: false//是否显示多选
+                });
+            }
+
+            //事件注册
+            function BindEvent() {
+                //保存-新增----创建群组
+                $("#Save").click(function () {
+                    $('#addOperation-dialog1').modal('hide');
+                    //静态添加节点
+                    var parentNode = $('#left-tree').treeview('getSelected');
+                    // var node = {
+                    //         text: $('#addName').val()
+                    //             };
+                    // $('#left-tree').treeview('addNode', [node, parentNode]);
+                    $.ajax({
+                        type: "post",
+                        url: "api/group/add",
+                        data: {
+                            "name": $('#addName').val()
+                        },
+                        dataType: "json",
+                        success: function (data) {
+                            alert(errorcode[data.code]);
+                            if (data.code == 1000) {
+                                $.ajax({
+                                    type: 'post',
+                                    url: 'api/group/listgroupandmember',
+                                    dataType: 'json',
+                                    success: function (data) {
+                                        init(data.data);
+                                    }
+                                });
+                            }
+                            if (data.code == 1001) {
+                                window.location.href = "login.html";
+                            }
+                        },
+                        error: function () {
+                            alert("提交失败！");
+                        }
+                    });
+                });
+            }
+
+            //保存-编辑 ----修改群组名称
+            $('#Edit').click(function () {
+                $('#addOperation-dialog2').modal('hide');
+                var node = $('#left-tree').treeview('getSelected');
+                //alert(node[0].gid);
+                // 	var newNode={
+                // 		text:$('#editName').val()
+                // 	};
+                // $('#left-tree').treeview('updateNode', [ node, newNode]);
+                $.ajax({
+                    type: 'post',
+                    url: 'api/group/change',
+                    data: {
+                        "gid": node[0].gid,
+                        "newname": $('#editName').val()
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        alert(errorcode[data.code]);
+                        if (data.code == 1000) {
+                            var newNode = {
+                                text: $('#editName').val()
+                            };
+                            $('#left-tree').treeview('updateNode', [node, newNode]);
+                        }
+                        if (data.code == 1001) {
+                            window.location.href = "login.html";
+                        }
+                    },
+                    error: function () {
+                        alert("提交失败！");
+                    }
+                });
+            });
+
+            //添加群成员
+            $("#addnewmem").click(function () {
+                $('#addOperation-dialog3').modal('hide');
+                var node = $('#left-tree').treeview('getSelected');
+                $.ajax({
+                    type: 'post',
+                    url: 'api/group/adduser',
+                    data: {
+                        "gid": node[0].gid,
+                        "uid": $("#newmem").val()
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        alert(errorcode[data.code]);
+                        if (data.code == 1000) {
+                            $.ajax({
+                                type: 'post',
+                                url: 'api/group/listgroupandmember',
+                                dataType: 'json',
+                                success: function (data) {
+                                    init(data.data);
+                                }
+                            });
+                        }
+                        if (data.code == 1001) {
+                            window.location.href = "login.html";
+                        }
+                    },
+                    error: function () {
+                        alert("提交失败！");
+                    }
+                });
+            });
+
+
+            //显示-添加  添加群组按钮的响应事件，点击弹出相应的模态框
+            $("#addGroup").click(function () {
+                var node = $('#left-tree').treeview('getSelected');
+                //alert(node[0].text);
+                if (node.length != 0) {
+                    $.showMsgText('无法创建群组！');
+                    return;
+                }
+                $('#addName').val('');
+                $('#addOperation-dialog1').modal('show');
+
+            });
+            //显示-编辑
+            $("#btnEdit").click(function () {
+                var node = $('#left-tree').treeview('getSelected');
+                $('#editShow').show();
+
+            });
+            //删除群组  -----删除群组
+            $("#delGroup").click(function () {
+                var node = $('#left-tree').treeview('getSelected');
+                if (node.length == 0) {
+                    $.showMsgText('请选择群组');
+                    return;
+                }
+                else if (node[0].fid) {
+                    $.showMsgText('请选择群组');
+                    return;
+                }
+                else {
+                    BootstrapDialog.confirm({
+                        title: '提示',
+                        message: '确定删除此群组?',
+                        size: BootstrapDialog.SIZE_SMALL,
+                        type: BootstrapDialog.TYPE_DEFAULT,
+                        closable: true,
+                        btnCancelLabel: '取消',
+                        btnOKLabel: '确定',
+                        callback: function (result) {
+                            if (result) {
+                                $.ajax({
+                                    type: 'post',
+                                    url: 'api/group/delete',
+                                    data: {
+                                        "gid": node[0].gid
+                                    },
+                                    dataType: 'json',
+                                    success: function (data) {
+                                        alert(errorcode[data.code]);
+                                        if (data.code == 1000) {
+                                            $.ajax({
+                                                type: 'post',
+                                                url: 'api/group/listgroupandmember',
+                                                dataType: 'json',
+                                                success: function (data) {
+                                                    init(data.data);
+                                                }
+                                            });
+                                        }
+                                    },
+                                    error: function () {
+                                        alert("提交失败！");
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+            //修改群组按钮的响应事件，点击会弹出相应的模态框
+            $("#changeGroup").click(function () {
+                var node = $('#left-tree').treeview('getSelected');
+                if (node.length == 0) {
+                    $.showMsgText('请选择群组');
+                    return;
+                }
+                else if (node[0].fid) {
+                    $.showMsgText('请选择群组');
+                    return;
+                }
+                $('#addName').val('');
+                $('#addOperation-dialog2').modal('show');
+            });
+            //删除群成员
+            $("#delgroupmem").click(function () {
+                var node = $('#left-tree').treeview('getSelected');
+                if (node.length == 0) {
+                    $.showMsgText('请选择群成员');
+                    return;
+                }
+                else if (node[0].gid) {
+                    $.showMsgText('请选择群成员');
+                    return;
+                }
+                else {
+                    BootstrapDialog.confirm({
+                        title: '提示',
+                        message: '确定删除此成员?',
+                        size: BootstrapDialog.SIZE_SMALL,
+                        type: BootstrapDialog.TYPE_DEFAULT,
+                        closable: true,
+                        btnCancelLabel: '取消',
+                        btnOKLabel: '确定',
+                        callback: function (result) {
+                            if (result) {
+                                var parentnode = $('#left-tree').treeview('getParents', node);
+                                $.ajax({
+                                    type: 'post',
+                                    url: 'api/group/deluser',
+                                    data: {
+                                        "gid": parentnode[0].gid,
+                                        "uid": node[0].fid
+                                    },
+                                    dataType: 'json',
+                                    success: function (data) {
+                                        alert(errorcode[data.code]);
+                                        if (data.code == 1000) {
+                                            del();
+                                        }
+                                        if (data.code == 1001) {
+                                            window.location.href = "login.html";
+                                        }
+                                    },
+                                    error: function () {
+                                        alert("提交失败！");
+                                    }
+                                });
+                            }
+                        }
+                    });
+
+                    function del() {
+                        $('#left-tree').treeview('removeNode', [node, {silent: true}]);
+                    }
+                }
+            });
+
+            //退群
+            $("#exitGroup").click(function () {
+                var node = $('#left-tree').treeview('getSelected');
+                if (node.length == 0) {
+                    $.showMsgText('请选择群组');
+                    return;
+                }
+                else if (node[0].fid) {
+                    $.showMsgText('请选择群组');
+                    return;
+                }
+                else {
+                    BootstrapDialog.confirm({
+                        title: '提示',
+                        message: '确定退出此群组?',
+                        size: BootstrapDialog.SIZE_SMALL,
+                        type: BootstrapDialog.TYPE_DEFAULT,
+                        closable: true,
+                        btnCancelLabel: '取消',
+                        btnOKLabel: '确定',
+                        callback: function (result) {
+                            if (result) {
+                                $.ajax({
+                                    type: 'post',
+                                    url: 'api/user/exitgroup',
+                                    data: {
+                                        "gid": node[0].gid
+                                    },
+                                    dataType: 'json',
+                                    success: function (data) {
+                                        alert(errorcode[data.code]);
+                                        if (data.code == 1000) {
+                                            $.ajax({
+                                                type: 'post',
+                                                url: 'api/group/listgroupandmember',
+                                                dataType: 'json',
+                                                success: function (data) {
+                                                    init(data.data);
+                                                }
+                                            });
+                                        }
+                                        if (data.code == 1001) {
+                                            window.location.href = "login.html";
+                                        }
+                                    },
+                                    error: function () {
+                                        alert("提交失败！");
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+
+            //添加群成员按钮响应事件，点击弹出相应的模态框
+            $("#addgroupmem").click(function () {
+                var node = $('#left-tree').treeview('getSelected');
+                if (node.length == 0) {
+                    $.showMsgText('请选择群组');
+                    return;
+                }
+                else if (node[0].fid) {
+                    $.showMsgText('请选择群组');
+                    return;
+                }
+                $('#addName').val('');
+                $('#addOperation-dialog3').modal('show');
+            });
+            //获取树数据
+            var tree;
+            $.ajax({
+                type: 'post',
+                url: 'api/group/listgroupandmember',
+                dataType: 'json',
+                success: function (data) {
+                    init(data.data);
+                    //console.log(data.data);
+                    if (data.code == 1001) {
+                        window.location.href = "login.html";
+                    }
+                }
+            });
+
+            /*-----页面pannel内容区高度自适应 start-----*/
+            $(window).resize(function () {
+                setCenterHeight();
+            });
+            setCenterHeight();
+
+            function setCenterHeight() {
+                var height = $(window).height();
+                var centerHight = height - 240;
+                $(".right_centent").height(centerHight).css("overflow", "auto");
+            }
+
+            /*-----页面pannel内容区高度自适应 end-----*/
+        });
+
+    </script>
+</head>
+<body style="padding: 10px;">
+
+<header class="container" style="margin-bottom: 35px;">
+    <div class="row">
+        <div class="col-md-10">
+            <!-- 				<input id="btnAdd" class="btn btn-primary" type="button" value="添加节点">
+                            <input id="btnMove" class="btn btn-success" type="button" value="节点移动">
+                            <input id="btnDel" class="btn btn-danger" type="button" value="删除节点"> -->
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="panel panel-primary ">
+                <div class="panel-heading">
+                    <h3 class="panel-title">群</h3>
+                </div>
+                <div style="padding-top: 10px;">
+                    <center>
+                        <input id="addGroup" class="btn btn-primary" type="button" value="创建群组">
+                        <input id="delGroup" class="btn btn-danger" type="button" value="删除群组">
+                        <input id="changeGroup" class="btn btn-danger" type="button" value="修改群组">
+                    </center>
+                </div>
+                <div class="panel-body right_centent" style="">
+                    <div id="left-tree"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="panel panel-primary ">
+                <div class="panel-heading">
+                    <h3 class="panel-title">成员资料</h3>
+                </div>
+                <div style="padding-top: 43px;"></div>
+                <!--编辑操作权限 start-->
+                <div class="panel-body right_centent">
+                    <div id="editShow">
+                        <div>
+                            <div class="input-group margin-t-5">
+                                <span class="input-group-addon">昵称:</span>
+
+                                <input id="groupName" type="text" class="form-control" readonly/>
+                            </div>
+                            <div class="input-group margin-t-5">
+                                <span class="input-group-addon">账号:</span>
+
+                                <input id="groupaccount" type="text" class="form-control" readonly/>
+                            </div>
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <input id="addgroupmem" class="btn btn-success" type="button" value="添加群成员">
+                            <input id="delgroupmem" class="btn btn-danger" type="button" value="删除群成员">
+                            <input id="exitGroup" class="btn btn-danger" type="button" value="退群">
+                        </div>
+                    </div>
+                </div>
+                <!--编辑操作权限 end-->
+            </div>
+        </div>
+    </div>
+</div>
+<div>
+    <!--弹出框 新增权限 start-->
+    <div class="modal fade" id="addOperation-dialog1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+
+            <div class="modal-content radius_5">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">新增</h4>
+                </div>
+                <div class="modal-body">
+                    <div group="" item="add">
+                        <div>
+                            <div class="input-group margin-t-5">
+                                <span class="input-group-addon">名称:</span>
+                                <input id="addName" type="text" class="form-control"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="Save" type="button" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--弹出框 新增权限 end-->
+    <!-- 弹出框 修改群组名权限 start -->
+    <div class="modal fade" id="addOperation-dialog2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content radius_5">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">修改</h4>
+                </div>
+                <div class="modal-body">
+                    <div group="" item="add">
+                        <div>
+                            <div class="input-group margin-t-5">
+                                <span class="input-group-addon">新群名:</span>
+                                <input id="editName" type="text" class="form-control"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="Edit" type="button" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 弹出框 修改群组名权限 end -->
+    <!-- 弹出框 添加群成员权限 start -->
+    <div class="modal fade" id="addOperation-dialog3" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+
+            <div class="modal-content radius_5">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">添加群成员</h4>
+                </div>
+                <div class="modal-body">
+                    <div group="" item="add">
+                        <div>
+                            <div class="input-group margin-t-5">
+                                <span class="input-group-addon">新成员账号:</span>
+                                <input id="newmem" type="text" class="form-control"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="addnewmem" type="button" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 弹出框 添加群成员权限 end -->
+
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>删除文件</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+</head>
+<body style="padding-top: 50px">
+
+<div class="container">
+    <div class="col-md-10">
+        <table id="mytab" class="table table-hover"></table>
+
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        //根据窗口调整表格高度
+        $(window).resize(function () {
+            $('#mytab').bootstrapTable('resetView', {
+                height: tableHeight()
+            })
+        });
+
+        $('#mytab').bootstrapTable({
+
+            clickToSelect: true,
+            url: "api/file/list",//数据源
+            dataField: "rows",//服务端返回数据键值 就是说记录放的键值是rows，分页时使用总记录数的键值为total
+            height: tableHeight(),//高度调整
+            search: true,//是否搜索
+            pagination: true,//是否分页
+            pageSize: 10,//单页记录数
+            pageList: [10, 20],//分页步进值
+            sidePagination: "client",//客户端分页
+            contentType: "application/x-www-form-urlencoded",//请求数据内容格式 默认是 application/json 自己根据格式自行服务端处理
+            dataType: "json",//期待返回数据类型
+            method: "post",//请求方式
+            searchAlign: "right",//查询框对齐方式
+
+            searchOnEnterKey: true,//回车搜索
+            showRefresh: true,//刷新按钮
+            showColumns: true,//列选择按钮
+            buttonsAlign: "left",//按钮对齐方式
+            toolbar: "#toolbar",//指定工具栏
+            toolbarAlign: "right",//工具栏对齐方式
+            columns: [
+                {
+                    title: "文件编号",//标题
+                    field: "hash",//键名
+                    sortable: true,//是否可排序
+                    order: "desc",//默认排序方式
+                    searchable: false,
+                    visible: false
+                },
+                {
+                    title: "文件名",//标题
+                    field: "name",//键名
+                    sortable: true,//是否可排序
+                    order: "desc",//默认排序方式
+                    searchable: true
+                },
+                {
+                    title: "上传者",
+                    field: "uid",
+                    align: "center",
+                    searchable: true
+                },
+                {
+                    title: "上传时间",
+                    field: "datetime",
+                    formatter: function (datetime) {
+                        return timeFormatter(datetime);
+                    },
+                    align: "center",
+                    searchable: false
+                },
+                {
+                    field: "operate",
+                    title: "操作",
+                    align: "center",
+                    events: "operateEvents",
+                    formatter: operateFormatter
+                }
+
+            ],
+
+            locale: "zh-CN", //中文支持
+            detailView: false //是否显示详情折叠
+        });
+        // $('#mytab').bootstrapTable('hideColumn', 'fileid');
+    });
+
+    function tableHeight() {
+        return $(window).height() - 100;
+    }
+
+    function operateFormatter(value, row, index) {
+
+        return ['<button type="button" class="delete btn btn-primary  btn-sm"  style="margin-right:15px;">删除</button>'].join('');
+    }
+
+    window.operateEvents = {
+        'click .delete': function (e, value, row, index) {
+            $.ajax({
+                url: 'api/file/delete',
+                type: 'post',
+                data: {
+                    "hash": row.hash
+                },
+                dataType: 'json',
+                success: function (data) {
+                    alert(errorcode[data.code]);
+                    if (data.code == 1000) {
+                        $("#mytab").bootstrapTable('remove', {
+                            field: 'hash',
+                            values: [row.hash]
+                        });
+                    }
+                },
+                error: function (data) {
+                    alert("提交失败");
+                }
+            });
+
+        }
+    };
+</script>
+</body>
+</html>

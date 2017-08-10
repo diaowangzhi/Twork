@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.twork.dao.FriendMapper">
+  <resultMap id="BaseResultMap" type="com.twork.pojo.Friend">
+    <id column="uid" jdbcType="INTEGER" property="uid" />
+    <id column="fid" jdbcType="INTEGER" property="fid" />
+    <result column="id" jdbcType="SMALLINT" property="id" />
+    <result column="datetime" jdbcType="TIMESTAMP" property="datetime" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    delete from `friend`
+    where `uid` = #{uid,jdbcType=INTEGER}
+      and `fid` = #{fid,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.twork.pojo.Friend">
+    insert into `friend` (`uid`, `fid`
+    <if test="id != null">, `id`</if>
+    <if test="datetime != null">, `datetime`</if>
+    )
+    values (#{uid,jdbcType=INTEGER}, #{fid,jdbcType=INTEGER}
+    <if test="id != null">, #{id,jdbcType=SMALLINT}</if>
+    <if test="datetime != null">, #{datetime,jdbcType=TIMESTAMP}</if>
+    )
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.twork.pojo.Friend">
+    update `friend`
+    set `id` = #{id,jdbcType=SMALLINT},
+      `datetime` = #{datetime,jdbcType=TIMESTAMP}
+    where `uid` = #{uid,jdbcType=INTEGER}
+      and `fid` = #{fid,jdbcType=INTEGER}
+  </update>
+  <update id="changeFriendGroup" parameterType="map">
+    update `friend`
+    set `id` = #{newId,jdbcType=SMALLINT}
+    where `uid` = #{uid,jdbcType=INTEGER}
+    and `id` = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="map" resultMap="BaseResultMap">
+    select `uid`, `fid`, `id`, `datetime`
+    from `friend`
+    where `uid` = #{uid,jdbcType=INTEGER}
+      and `fid` = #{fid,jdbcType=INTEGER}
+  </select>
+  <select id="selectByUid" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select `uid`, `fid`, `id`, `datetime`
+    from `friend`
+    where `uid` = #{uid,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select `uid`, `fid`, `id`, `datetime`
+    from `friend`
+  </select>
+</mapper>

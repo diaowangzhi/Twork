@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>friendmanage</title>
+</head>
+<body style="padding-top: 50px">
+
+<div class="container">
+    <div class="col-md-10">
+
+        <div class="input-group">
+            <!-- <input type="month" class="form-control" id="time" > -->
+            <input type="text" id="uid" placeholder="用户账号">
+            <select class="combobox" id="year">
+                <option value="2016">2016年</option>
+                <option value="2017">2017年</option>
+                <option value="2018">2018年</option>
+                <option value="2019">2019年</option>
+                <option value="2020">2020年</option>
+            </select>
+            <select class="combobox" id="month">
+                <option value="1">1月</option>
+                <option value="2">2月</option>
+                <option value="3">3月</option>
+                <option value="4">4月</option>
+                <option value="5">5月</option>
+                <option value="6">6月</option>
+                <option value="7">7月</option>
+                <option value="8">8月</option>
+                <option value="9">9月</option>
+                <option value="10">10月</option>
+                <option value="11">11月</option>
+                <option value="12">12月</option>
+            </select>
+
+            <span class="input-group-btn">
+                    <button class="btn btn-info" type="button" id="search">搜索</button>
+                    <button class="btn btn-info" type="button" id="count">统计</button>
+                </span>
+        </div>
+        <!--   <div class="input-group " style="float: right;">
+              总人数:<input class="form-control" type="text" id="usernum" readonly>
+              签到总天数:<input class="form-control" type="text" id="signnum" readonly>
+              平均每人签到天数:<input class="form-control" type="text" id="average" readonly>
+          </div> -->
+        <form class="form-inline pull-right" role="form" style="margin-top: 10px">
+            <div class="form-group" style="float: right;">
+                <span class="lable">总人数：</span>
+                <input class="form-control" type="text" id="usernum" style="margin-right:20px " readonly>
+                <span class="lable">签到总天数：</span>
+                <input class="form-control" type="text" id="signnum" style="margin-right:20px " readonly>
+                <span class="lable">平均每人签到天数：</span>
+                <input class="form-control" type="text" id="average" readonly>
+            </div>
+        </form>
+
+        <table id="mytab" class="table table-hover"></table>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function tableHeight() {
+        return $(window).height() - 100;
+    }
+
+    /**
+     * 列的格式化函数 在数据从服务端返回装载前进行处理
+     * @param  {[type]} value [description]
+     * @param  {[type]} row   [description]
+     * @param  {[type]} index [description]
+     * @return {[type]}       [description]
+     */
+    /*function levelFormatter(value,row,index){
+     if（value.eaquals("0")）
+     return "受限用户";
+     }*/
+
+
+    function initTable() {
+        //先销毁表格  
+        $('#mytab').bootstrapTable('destroy');
+        //初始化表格,动态从服务器加载数据  
+        $('#mytab').bootstrapTable({
+            clickToSelect: true,
+            url: "api/manager/listsign",//数据源
+            dataField: "rows",//服务端返回数据键值 就是说记录放的键值是rows，分页时使用总记录数的键值为total
+            height: tableHeight(),//高度调整
+            search: false,//是否搜索
+            striped: true,
+            pagination: true,//是否分页
+            pageSize: 10,//单页记录数
+            pageList: [10, 20],//分页步进值
+            sidePagination: "client",//客户端分页
+            contentType: "application/x-www-form-urlencoded",//请求数据内容格式 默认是 application/json 自己根据格式自行服务端处理
+            dataType: "json",//期待返回数据类型
+            method: "post",//请求方式
+            searchAlign: "right",//查询框对齐方式
+            queryParamsType: "undefined",//查询参数组织方式
+            queryParams: function getParams(params) {
+                var param = {
+                    uid: $('#uid').val(),
+                    year: $('#year').val(),
+                    month: $('#month').val()
+                };
+
+                return param;
+            },
+
+            searchOnEnterKey: false,//回车搜索
+            showRefresh: false,//刷新按钮
+            showColumns: false,//列选择按钮
+            buttonsAlign: "left",//按钮对齐方式
+            toolbar: "#toolbar",//指定工具栏
+            toolbarAlign: "right",//工具栏对齐方式
+            columns: [
+                {
+                    title: "账号",//标题
+                    field: "uid",//键名
+                    sortable: true,//是否可排序
+                    order: "desc",//默认排序方式
+                    searchable: true
+                },
+                {
+                    field: "datetime",
+                    title: "时间",
+                    formatter: function (datetime) {
+                        return timeFormatter(datetime);
+                    },
+                    align: "center",
+                    titleTooltip: "this is name",
+                    searchable: false
+                }
+
+            ],
+            locale: "zh-CN", //中文支持
+            detailView: false //是否显示详情折叠
+        });
+    }
+
+    /*$(document).ready(function () {          
+     //调用函数，初始化表格
+     initTable();
+     //根据窗口调整表格高度
+     $(window).resize(function() {
+     $('#mytab').bootstrapTable('resetView', {
+     height: tableHeight()
+     })
+     })
+     });*/
+    $("#search").click(function () {
+        initTable();
+    });
+    $("#count").click(function () {
+        /*var time=$("#time").val();
+         var arr=time.split('-');
+         var year=arr[0];
+         var month=arr[1];*/
+        $.ajax({
+            type: 'post',
+            url: 'api/manager/countsign',
+            data: {
+                "year": $('#year').val(),
+                "month": $('#month').val()
+            },
+            dataType: 'json',
+            success: function (data) {
+                alert(errorcode[data.code]);
+                if (data.code == 1000) {
+                    $("#usernum").val(data.data.usernum);
+                    $("#signnum").val(data.data.signnum);
+                    $("#average").val(data.data.average);
+                }
+                if (data.code == 1001) {
+                    window.location.href = "login.html";
+                }
+            },
+            error: function () {
+                alert("提交失败！");
+            }
+        });
+    });
+
+</script>
+</body>
+</html>

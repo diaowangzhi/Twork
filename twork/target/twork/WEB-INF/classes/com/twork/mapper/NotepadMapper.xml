@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.twork.dao.NotepadMapper">
+  <resultMap id="BaseResultMap" type="com.twork.pojo.Notepad">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="uid" jdbcType="INTEGER" property="uid" />
+    <result column="cid" jdbcType="INTEGER" property="cid" />
+    <result column="content" jdbcType="CHAR" property="content" />
+    <result column="datetime" jdbcType="TIMESTAMP" property="datetime" />
+    <result column="reminddatetime" jdbcType="TIMESTAMP" property="reminddatetime" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from `notepad`
+    where `id` = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.twork.pojo.Notepad">
+    insert into `notepad` (`id`, `uid`, `cid`, `content`
+    <if test="datetime != null">, `datetime`</if>
+    <if test="reminddatetime != null">, `reminddatetime`</if>
+    )
+    values (#{id,jdbcType=INTEGER}, #{uid,jdbcType=INTEGER}, #{cid,jdbcType=INTEGER}, #{content,jdbcType=CHAR}
+    <if test="datetime != null">, #{datetime,jdbcType=TIMESTAMP}</if>
+    <if test="reminddatetime != null">, #{reminddatetime,jdbcType=TIMESTAMP}</if>
+    )
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.twork.pojo.Notepad">
+    update `notepad`
+    set `uid` = #{uid,jdbcType=INTEGER},
+      `cid` = #{cid,jdbcType=INTEGER},
+      `content` = #{content,jdbcType=CHAR},
+      `datetime` = #{datetime,jdbcType=TIMESTAMP},
+      `reminddatetime` = #{reminddatetime,jdbcType=TIMESTAMP}
+    where `id` = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select `id`, `uid`, `cid`, `content`, `datetime`, `reminddatetime`
+    from `notepad`
+    where `uid` = #{uid,jdbcType=INTEGER} and `id` = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectByUid" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select `id`, `uid`, `cid`, `content`, `datetime`, `reminddatetime`
+    from `notepad`
+    where `uid` = #{uid,jdbcType=INTEGER}
+    order by `datetime` desc
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select `id`, `uid`, `cid`, `content`, `datetime`, `reminddatetime`
+    from `notepad`
+  </select>
+  <select id="getLastId" resultType="java.lang.Integer">
+    select `id` from `notepad` where `uid` = #{uid,jdbcType=INTEGER} order by `id` desc limit 1
+  </select>
+</mapper>

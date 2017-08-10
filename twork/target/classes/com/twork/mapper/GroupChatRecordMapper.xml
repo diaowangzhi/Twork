@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.twork.dao.GroupChatRecordMapper">
+  <resultMap id="BaseResultMap" type="com.twork.pojo.GroupChatRecord">
+    <id column="gid" jdbcType="INTEGER" property="gid" />
+    <id column="uid" jdbcType="INTEGER" property="uid" />
+    <id column="datetime" jdbcType="TIMESTAMP" property="datetime" />
+    <result column="content" jdbcType="CHAR" property="content" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    delete from `group_chat_record`
+    where `gid` = #{gid,jdbcType=INTEGER}
+      and `uid` = #{uid,jdbcType=INTEGER}
+      and `datetime` = #{datetime,jdbcType=TIMESTAMP}
+  </delete>
+  <insert id="insert" parameterType="com.twork.pojo.GroupChatRecord">
+    insert into `group_chat_record` (`gid`, `uid`
+    <if test="datetime != null">, `datetime`</if>
+    , `content`)
+    values (#{gid,jdbcType=INTEGER}, #{uid,jdbcType=INTEGER}
+    <if test="datetime != null">, #{datetime,jdbcType=TIMESTAMP}</if>
+    , #{content,jdbcType=CHAR})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.twork.pojo.GroupChatRecord">
+    update `group_chat_record`
+    set `content` = #{content,jdbcType=CHAR}
+    where `gid` = #{gid,jdbcType=INTEGER}
+      and `uid` = #{uid,jdbcType=INTEGER}
+      and `datetime` = #{datetime,jdbcType=TIMESTAMP}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="map" resultMap="BaseResultMap">
+    select `gid`, `uid`, `datetime`, `content`
+    from `group_chat_record`
+    where `gid` = #{gid,jdbcType=INTEGER}
+      and `uid` = #{uid,jdbcType=INTEGER}
+      and `datetime` = #{datetime,jdbcType=TIMESTAMP}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select `gid`, `uid`, `datetime`, `content`
+    from `group_chat_record`
+  </select>
+  <select id="selectByGid" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select `gid`, `uid`, `datetime`, `content`
+    from `group_chat_record`
+    where `gid` = #{gid,jdbcType=INTEGER}
+    order by `datetime`
+  </select>
+  <select id="offLineRecord" resultMap="BaseResultMap" parameterType="map" >
+    select `gid`, `uid`, `datetime`, `content`
+    from `group_chat_record`
+    where `gid` = #{gid,jdbcType=INTEGER}
+    and `datetime` > #{lastonlinedatetime,jdbcType=TIMESTAMP}
+    order by `datetime`
+  </select>
+</mapper>

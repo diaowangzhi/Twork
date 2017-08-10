@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>announcement</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+</head>
+<body style="padding-top: 50px">
+
+<div class="container">
+    <div class="col-md-10">
+        <button type="button" class="btn btn-default" id="sign">签到</button>
+        <table id="mytab" class="table table-hover">
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        //根据窗口调整表格高度
+        $(window).resize(function () {
+            $('#mytab').bootstrapTable('resetView', {
+                height: tableHeight()
+            })
+        });
+
+        $('#mytab').bootstrapTable({
+
+            clickToSelect: true,
+            url: "api/system/shownotice",//数据源
+            dataField: "rows",//服务端返回数据键值 就是说记录放的键值是rows，分页时使用总记录数的键值为total
+            height: tableHeight(),//高度调整
+            search: false,//是否搜索
+            pagination: true,//是否分页
+            pageSize: 10,//单页记录数
+            pageList: [10, 20],//分页步进值
+            sidePagination: "client",//客户端分页
+            contentType: "application/x-www-form-urlencoded",//请求数据内容格式 默认是 application/json 自己根据格式自行服务端处理
+            dataType: "json",//期待返回数据类型
+            method: "post",//请求方式
+            searchAlign: "right",//查询框对齐方式
+            queryParamsType: "undefined",//查询参数组织方式
+
+            searchOnEnterKey: false,//回车搜索
+            showRefresh: false,//刷新按钮
+            //showColumns: true,//列选择按钮
+            buttonsAlign: "left",//按钮对齐方式
+            toolbar: "#toolbar",//指定工具栏
+            toolbarAlign: "right",//工具栏对齐方式
+            columns: [
+                {
+                    title: "编号",//标题
+                    field: "id",//键名
+                    sortable: true,//是否可排序
+                    order: "desc",//默认排序方式
+                    visible: false
+                },
+                {
+                    field: "content",
+                    title: "公告内容",
+                    align: "center",
+                    titleTooltip: "this is name",
+                    edit: true
+                },
+                {
+                    title: "发布时间",//标题
+                    field: "datetime",//键名
+                    formatter: function (datetime) {
+                        return timeFormatter(datetime);
+                    },
+                    sortable: true,//是否可排序
+                    order: "desc"//默认排序方式
+                }
+            ],
+            locale: "zh-CN", //中文支持
+            detailView: false //是否显示详情折叠
+        });
+    });
+
+    function tableHeight() {
+        return $(window).height() - 105;
+    }
+</script>
+<script type="text/javascript">
+    $("#sign").click(function () {
+        $.ajax({
+            type: "post",
+            url: "api/user/sign",//提交地址
+            dataType: 'json',
+            // contentType:"application/json; charset=utf-8",
+            success: function (data) {
+                alert(errorcode[data.code]);
+                if (data.code == 1001) {
+                    window.location.href = "login.html";
+                }
+            },
+            error: function () {
+                alert("提交失败！");
+            }
+        });
+    });
+</script>
+</body>
+</html>

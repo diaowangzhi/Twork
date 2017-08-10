@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>bootstrap-treeview</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <script type="text/javascript">
+        $(function () {
+
+            BindEvent();
+
+            //获取树数据
+            var tree;
+            $.ajax({
+                type: 'post',
+                url: 'api/friend/listgroupandfriend',
+                dataType: 'json',
+                success: function (data) {
+                    init(data.data);
+                    //console.log(data.data);
+                }
+            });
+
+            //页面加载
+            //渲染树
+            function init(tree) {
+                $('#left-tree').treeview({
+                    data: tree,
+                    levels: 1,
+                    onNodeSelected: function (event, node) {
+                        if (node.fid) {
+                            $('#nickName').val(node.text);
+                            $('#account').val(node.fid);
+                        }
+
+                    },
+                    showCheckbox: false//是否显示多选
+                });
+            }
+
+            //事件注册
+            function BindEvent() {
+                //保存-新增---添加好友分组
+                $("#Save").click(function () {
+                    $('#addOperation-dialog1').modal('hide');
+                    //静态添加节点
+                    var parentNode = $('#left-tree').treeview('getSelected');
+                    // var node = {
+                    //         text: $('#addName').val()
+                    //             };
+                    // $('#left-tree').treeview('addNode', [node, parentNode]);
+                    $.ajax({
+                        type: "post",
+                        url: "api/friend/addgroup",
+                        data: {
+                            "name": $('#addName').val()
+                        },
+                        dataType: "json",
+                        success: function (data) {
+                            alert(errorcode[data.code]);
+                            if (data.code == 1000) {
+                                $.ajax({
+                                    type: 'post',
+                                    url: 'api/friend/listgroupandfriend',
+                                    dataType: 'json',
+                                    success: function (data) {
+                                        init(data.data);
+                                    }
+                                });
+
+                            }
+                            else if (data.code == 1001) {
+                                window.location.href = "login.html";
+                            }
+                            else {
+                                alert("创建失败！");
+                            }
+
+                        },
+                        error: function () {
+                            alert("提交失败！");
+                        }
+                    });
+                });
+            }
+
+            //保存-编辑 ----修改好友分组名称
+            $('#Edit').click(function () {
+                $('#addOperation-dialog2').modal('hide');
+                var node = $('#left-tree').treeview('getSelected');
+                // 	var newNode={
+                // 		text:$('#editName').val()
+                // 	};
+                // $('#left-tree').treeview('updateNode', [ node, newNode]);
+                $.ajax({
+                    type: 'post',
+                    url: 'api/friend/changegroup',
+                    data: {
+                        "oldname": node[0].text,
+                        "newname": $('#editName').val()
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        alert(errorcode[data.code]);
+                        if (data.code == 1000) {
+                            var newNode = {
+                                text: $('#editName').val()
+                            };
+                            $('#left-tree').treeview('updateNode', [node, newNode]);
+                        }
+                        if (data.code == 1001) {
+                            window.location.href = "login.html";
+                        }
+                    },
+                    error: function () {
+                        alert("提交失败！");
+                    }
+                });
+            });
+            //移动好友实现
+            $('#btnMove').click(function () {
+                $('#addOperation-dialog3').modal('hide');
+                var sel = $('#selectgroup').val();//获取选中分组名称
+                // alert(sel);
+                var node = $('#left-tree').treeview('getSelected');//获取当前节点
+                $.ajax({
+                    type: 'post',
+                    url: 'api/friend/movefriend',
+                    dataType: 'json',
+                    data: {
+                        "fid": node[0].fid,
+                        "newname": sel
+                    },
+                    success: function (data) {
+                        alert(errorcode[data.code]);
+                        if (data.code == 1000) {
+                            $.ajax({
+                                type: 'post',
+                                url: 'api/friend/listgroupandfriend',
+                                dataType: 'json',
+                                success: function (data) {
+                                    init(data.data);
+                                }
+                            });
+                        }
+                        if (data.code == 1001) {
+                            window.location.href = "login.html";
+                        }
+                    },
+                    error: function () {
+                        alert("提交失败！");
+                    }
+                });
+            });
+
+
+            //显示-添加   添加分组按钮的响应事件，点击弹出相应的模态框
+            $("#addGroup").click(function () {
+                var node = $('#left-tree').treeview('getSelected');
+                //alert(node[0].text);
+                if (node.length != 0) {
+                    $.showMsgText('无法创建该分组！');
+                    return;
+                }
+                $('#addName').val('');
+                $('#addOperation-dialog1').modal('show');
+            });
+            //显示-编辑
+            $("#btnEdit").click(function () {
+                var node = $('#left-tree').treeview('getSelected');
+                $('#editShow').show();
+            });
+            //删除分组   删除选中的分组
+            $("#delGroup").click(function () {
+                var node = $('#left-tree').treeview('getSelected');
+                if (node.length == 0 || node[0].fid) {
+                    $.showMsgText('请选择分组');
+                    return;
+                }
+                else {
+                    BootstrapDialog.confirm({
+                        title: '提示',
+                        message: '确定删除此分组?',
+                        size: BootstrapDialog.SIZE_SMALL,
+                        type: BootstrapDialog.TYPE_DEFAULT,
+                        closable: true,
+                        btnCancelLabel: '取消',
+                        btnOKLabel: '确定',
+                        callback: function (result) {
+                            if (result) {
+                                $.ajax({
+                                    type: 'post',
+                                    url: 'api/friend/delgroup',
+                                    data: {
+                                        "name": node[0].text
+                                    },
+                                    dataType: 'json',
+                                    success: function (data) {
+                                        alert(errorcode[data.code]);
+                                        if (data.code == 1000) {
+                                            $.ajax({
+                                                type: 'post',
+                                                url: 'api/friend/listgroupandfriend',
+                                                dataType: 'json',
+                                                success: function (data) {
+                                                    init(data.data);
+                                                }
+                                            });
+                                        }
+                                        if (data.code == 1001) {
+                                            window.location.href = "login.html";
+                                        }
+                                    },
+                                    error: function () {
+                                        alert("提交失败！");
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+            //修改分组按钮的响应事件，点击会弹出相应的模态框
+            $("#changeGroup").click(function () {
+                var node = $('#left-tree').treeview('getSelected');
+                if (node.length == 0) {
+                    $.showMsgText('请选择分组');
+                    return;
+                }
+                else if (node[0].fid) {
+                    $.showMsgText('请选择分组');
+                    return;
+                }
+                $('#addName').val('');
+                $('#addOperation-dialog2').modal('show');
+            });
+            //移动好友分组响应事件，点击会弹出相应的模态框
+            var t = false;//全局变量控制只添加一次
+            $("#movefriend").click(function () {
+                // $.showMsgText('更新中...');
+                var node = $('#left-tree').treeview('getSelected');
+                if (node.length == 0) {
+                    $.showMsgText('请选择好友');
+                    return;
+                }
+                else if (!node[0].fid) {
+                    $.showMsgText('请选择好友');
+                    return;
+                }
+                else {
+                    $.ajax({
+                        type: 'post',
+                        url: 'api/friend/listgroup',
+                        dataType: 'json',
+                        success: function (data) {
+                            if (!t) {
+                                for (var i = 0; i < data.data.length; i++) {
+                                    $("#selectgroup").append("<option value=" + data.data[i].name + ">" + data.data[i].name + "</option> ");
+                                }
+                                t = true;
+                            }
+                        }
+                    });
+                    // var node = $('#left-tree').treeview('getSelected');
+                    // // if (node.length == 0) {
+                    // // 	$.showMsgText('请选择节点');
+                    // // 	return;
+                    // // }
+                    // $('#addName').val('');
+                    $('#addOperation-dialog3').modal('show');
+                }
+            });
+            //删除好友
+            $("#delfriend").click(function () {
+                var node = $('#left-tree').treeview('getSelected');
+                if (node.length == 0) {
+                    $.showMsgText('请选择好友');
+                    return;
+                }
+                else if (!node[0].fid) {
+                    $.showMsgText('请选择好友');
+                    return;
+                }
+                else {
+                    BootstrapDialog.confirm({
+                        title: '提示',
+                        message: '确定删除此好友?',
+                        size: BootstrapDialog.SIZE_SMALL,
+                        type: BootstrapDialog.TYPE_DEFAULT,
+                        closable: true,
+                        btnCancelLabel: '取消',
+                        btnOKLabel: '确定',
+                        callback: function (result) {
+                            if (result) {
+                                $.ajax({
+                                    type: 'post',
+                                    url: 'api/friend/delfriend',
+                                    data: {
+                                        "fid": node[0].fid
+                                    },
+                                    dataType: 'json',
+                                    success: function (data) {
+                                        alert(errorcode[data.code]);
+                                        if (data.code == 1000) {
+                                            del();
+                                        }
+                                        if (data.code == 1001) {
+                                            window.location.href = "login.html";
+                                        }
+                                    },
+                                    error: function () {
+                                        alert("提交失败！");
+                                    }
+                                });
+
+                            }
+                        }
+                    });
+
+                    function del() {
+
+                        $('#left-tree').treeview('removeNode', [node, {silent: true}]);
+                    }
+                }
+
+            });
+
+            /*-----页面pannel内容区高度自适应 start-----*/
+            $(window).resize(function () {
+                setCenterHeight();
+            });
+            setCenterHeight();
+
+            function setCenterHeight() {
+                var height = $(window).height();
+                var centerHight = height - 240;
+                $(".right_centent").height(centerHight).css("overflow", "auto");
+            }
+
+            /*-----页面pannel内容区高度自适应 end-----*/
+        });
+    </script>
+</head>
+<body style="padding: 10px;">
+
+<header class="container" style="margin-bottom: 35px;">
+    <div class="row">
+        <div class="col-md-10">
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="panel panel-primary ">
+                <div class="panel-heading">
+                    <h3 class="panel-title">好友分组</h3>
+                </div>
+                <div style="padding-top: 10px;">
+                    <center>
+                        <input id="addGroup" class="btn btn-primary" type="button" value="添加分组">
+                        <input id="delGroup" class="btn btn-danger" type="button" value="删除分组">
+                        <input id="changeGroup" class="btn btn-danger" type="button" value="修改分组">
+                    </center>
+                </div>
+                <div class="panel-body right_centent" style="">
+                    <div id="left-tree"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="panel panel-primary ">
+                <div class="panel-heading">
+                    <h3 class="panel-title">好友资料</h3>
+                </div>
+                <div style="padding-top: 43px;"></div>
+                <!--编辑操作权限 start-->
+                <div class="panel-body right_centent">
+                    <div id="editShow">
+                        <div>
+                            <div class="input-group margin-t-5">
+                                <span class="input-group-addon">昵称:</span>
+
+                                <input id="nickName" type="text" class="form-control" readonly/>
+                            </div>
+                            <div class="input-group margin-t-5">
+                                <span class="input-group-addon">账号:</span>
+
+                                <input id="account" type="text" class="form-control" readonly/>
+                            </div>
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <input id="movefriend" class="btn btn-success" type="button" value="移动好友">
+                            <input id="delfriend" class="btn btn-danger" type="button" value="删除好友">
+                        </div>
+                    </div>
+                </div>
+                <!--编辑操作权限 end-->
+            </div>
+        </div>
+    </div>
+</div>
+<div>
+    <!-- 各种模态框 -->
+    <!--弹出框 新增权限 start-->
+    <div class="modal fade" id="addOperation-dialog1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content radius_5">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">新增</h4>
+                </div>
+                <div class="modal-body">
+                    <div group="" item="add">
+                        <div>
+                            <div class="input-group margin-t-5">
+                                <span class="input-group-addon">名称:</span>
+                                <input id="addName" type="text" class="form-control"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="Save" type="button" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--弹出框 新增权限 end-->
+    <!-- 弹出框 修改分组名权限 start -->
+    <div class="modal fade" id="addOperation-dialog2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content radius_5">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">修改</h4>
+                </div>
+                <div class="modal-body">
+                    <div group="" item="add">
+                        <div>
+                            <div class="input-group margin-t-5">
+                                <span class="input-group-addon">名称:</span>
+                                <input id="editName" type="text" class="form-control"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="Edit" type="button" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 弹出框 修改分组名权限 end -->
+    <!-- 弹出框 移动好友 start -->
+    <div class="modal fade" id="addOperation-dialog3" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content radius_5">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">修改</h4>
+                </div>
+                <div class="modal-body">
+                    <div group="" item="add">
+                        <div>
+                            <div class="input-group margin-t-5">
+                                <select id="selectgroup"></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btnMove" type="button" class="btn btn-primary">移动</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 弹出框 移动好友 end -->
+</body>
+</html>

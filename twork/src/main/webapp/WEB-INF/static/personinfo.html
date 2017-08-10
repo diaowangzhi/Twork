@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>person</title>
+</head>
+<body style="padding-top: 50px ;">
+<div class="container">
+    <div class="col-md-9">
+        <div class="form" role="form">
+            <table class="table table-bordered table-hover">
+                <thead>
+                <tr>
+                    <th>账号</th>
+                    <th>昵称</th>
+                    <th>邮箱</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><input type="text" name="id" readonly id="id"></td>
+                    <td><input type="text" name="name" id="name"></td>
+                    <td><input type="text" name="email" id="email"></td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div style="text-align:center;">
+                <button type="submit" class="btn btn-default btn-lg" id="changeinfo">修改信息</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $.ajax({
+            url: 'api/user/listinfo',
+            type: 'post',
+            dataType: 'json',
+            success: function (data) {
+                // alert(errorcode[data.code]);
+                if (data.code == 1000) {
+                    $("#id").val(data.data.uid);
+                    $("#name").val(data.data.name);
+                    $("#email").val(data.data.email);
+                }
+                if (data.code == 1001) {
+                    window.location.href = "login.html";
+                }
+            },
+            error: function (data) {
+                alert("提交失败");
+            }
+        });
+    });
+    $("#changeinfo").click(function () {
+        var id = $("#id").val();
+        var name = $("#name").val();
+        var email = $("#email").val();
+        $.ajax({
+            type: "post",
+            url: "api/user/changeinfo",
+            data: {
+                "uid": id,
+                "name": name,
+                "email": email
+            },
+            dataType: "json",
+            success: function (data) {
+                alert(errorcode[data.code]);
+                if (data.code == 1001) {
+                    window.location.href = "login.html";
+                }
+            },
+            error: function () {
+                alert("提交失败！");
+            }
+        });
+    });
+</script>
+</body>
+</html>

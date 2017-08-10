@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.twork.dao.MessageMapper" >
+  <resultMap id="BaseResultMap" type="com.twork.pojo.Message" >
+    <id column="sid" property="sid" jdbcType="INTEGER" />
+    <id column="rid" property="rid" jdbcType="INTEGER" />
+    <result column="datetime" property="datetime" jdbcType="TIMESTAMP" />
+    <result column="content" property="content" jdbcType="CHAR" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="map" >
+    delete from `message`
+    where `sid` = #{sid,jdbcType=INTEGER}
+      and `rid` = #{rid,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.twork.websocket.message.Message" >
+    insert into `message` (`sid`, `rid`
+    <if test="datetime != null">, `datetime`</if>
+    , `content`)
+    values (#{sid,jdbcType=INTEGER}, #{rid,jdbcType=INTEGER}
+    <if test="datetime != null">, #{datetime,jdbcType=TIMESTAMP}</if>
+    , #{content,jdbcType=CHAR})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.twork.websocket.message.Message" >
+    update `message`
+    set `datetime` = #{datetime,jdbcType=TIMESTAMP},
+      `content` = #{content,jdbcType=CHAR}
+    where `sid` = #{sid,jdbcType=INTEGER}
+      and `rid` = #{rid,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="map" >
+    select `sid`, `rid`, `datetime`, `content`
+    from `message`
+    where `sid` = #{sid,jdbcType=INTEGER}
+      and `rid` = #{rid,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select `sid`, `rid`, `datetime`, `content`
+    from `message`
+  </select>
+  <select id="selectByUid" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select `sid`, `rid`, `datetime`, `content`
+    from `message`
+    where `rid` = #{uid,jdbcType=INTEGER}
+  </select>
+  <select id="count" resultType="java.lang.Integer" parameterType="java.lang.Integer" >
+    select count(`rid`)
+    from `message`
+    where `rid` = #{uid,jdbcType=INTEGER}
+  </select>
+</mapper>

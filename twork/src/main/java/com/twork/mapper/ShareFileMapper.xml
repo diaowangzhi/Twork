@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.twork.dao.ShareFileMapper">
+  <resultMap id="BaseResultMap" type="com.twork.pojo.ShareFile">
+    <id column="uid" jdbcType="INTEGER" property="uid" />
+    <id column="hash" jdbcType="CHAR" property="hash" />
+    <result column="name" jdbcType="CHAR" property="name" />
+    <result column="status" jdbcType="BIT" property="status" />
+    <result column="datetime" jdbcType="TIMESTAMP" property="datetime" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    delete from `share_file`
+    where `uid` = #{uid,jdbcType=INTEGER}
+      and `hash` = #{hash,jdbcType=CHAR}
+  </delete>
+  <insert id="insert" parameterType="com.twork.pojo.ShareFile">
+    insert into `share_file` (`uid`, `hash`, `name`
+    <if test="status != null">, `status`</if>
+    <if test="datetime != null">, `datetime`</if>
+    )
+    values (#{uid,jdbcType=INTEGER}, #{hash,jdbcType=CHAR}, #{name,jdbcType=CHAR}
+    <if test="status != null">, #{status,jdbcType=BIT}</if>
+    <if test="datetime != null">, #{datetime,jdbcType=TIMESTAMP}</if>
+    )
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.twork.pojo.ShareFile">
+    update `share_file`
+    set `name` = #{name,jdbcType=CHAR},
+      `status` = #{status,jdbcType=BIT},
+      `datetime` = #{datetime,jdbcType=TIMESTAMP}
+    where `uid` = #{uid,jdbcType=INTEGER}
+      and `hash` = #{hash,jdbcType=CHAR}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="map" resultMap="BaseResultMap">
+    select `uid`, `hash`, `name`, `status`, `datetime`
+    from `share_file`
+    where `uid` = #{uid,jdbcType=INTEGER}
+      and `hash` = #{hash,jdbcType=CHAR}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select `uid`, `hash`, `name`, `status`, `datetime`
+    from `share_file`
+  </select>
+  <select id="listchecked"  resultMap="BaseResultMap">
+    select `uid`, `hash`, `name`, `status`, `datetime`
+    from `share_file`
+    where `status` = true
+  </select>
+  <select id="listnochecked"  resultMap="BaseResultMap">
+    select `uid`, `hash`, `name`,  `status`, `datetime`
+    from `share_file`
+    where `status` = false
+  </select>
+</mapper>

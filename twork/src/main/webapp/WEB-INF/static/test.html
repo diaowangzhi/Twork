@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8"/>
+    <title>使用HTML的FormData属性实现文件上传</title>
+    <link rel="stylesheet" href="../css/fileUpload.css"/>
+</head>
+<body>
+<div class="container">
+    <!--读取要上传的文件-->
+    <input type="file" id="file"/>
+    <input type="button" id="btn1" value="点击上传" onclick="uploadClick();"/>
+</div>
+<script type="text/javascript">
+    //读取图片实例,并上传到服务器
+    var fileBox = document.getElementById('file');
+    fileBox.onchange = function () {
+        //获取选择文件的数组
+        var fileList = fileBox.files;
+        for (var i = 0; i < fileList.length; i++) {
+            var file = fileList[i];
+            uploadFile(file);
+        }
+    }
+
+    //关键代码上传到服务器
+    function uploadFile(file) {
+        var reader = new FileReader();
+        reader.readAsArrayBuffer(file);
+        reader.onload = function () {
+            var blob = new Blob([reader.result]);
+            //提交到服务器
+            var fd = new FormData();
+            fd.append('file', blob);
+            var ext = file.name.substring(file.name.lastIndexOf('.'));
+            fd.append('extention', ext);
+            fd.append('maxsize', 1024 * 1024 * 4);//Asp.net 默认一次上传最大4MB
+            fd.append('isClip', -1);
+            var xhr = new XMLHttpRequest();
+            xhr.open('post', '../ashx/upload.ashx', true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var data = eval('(' + xhr.responseText + ')');
+                    console.info(data);
+                    if (data.success) {
+                        //上传成功
+                        var imgName = data.msg;
+                        alert(imgName);
+                    } else {
+                        alert(data.msg);
+                    }
+                }
+            }
+            //开始发送
+            xhr.send(fd);
+        }
+    }
+</script>
+</body>
+</html>

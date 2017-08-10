@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>mynotebook</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+    <style type="text/css">
+        .mynotebook {
+            min-height: 528px;
+        }
+    </style>
+</head>
+
+<body style="padding-top: 50px">
+
+<div class="container">
+    <div class="col-md-10">
+        <!-- <div class="input-group">
+                <input type="text" class="form-control" placeholder="任务/记事编号" id="number">
+                <span class="input-group-btn">
+                    <button class="btn btn-info" type="button" onclick="searchperson()" id="peoplebtn"><span class="glyphicon glyphicon-search"></span></button>
+                </span>
+        </div> -->
+        <table id="mytab" class="table table-hover"></table>
+
+        <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                            &times;
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">修改记事/任务</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form role="form">
+                            <div class="form-group">
+                                <input type="text" class="form-control" id="nid" placeholder="任务接收人" style="display:none">
+                            </div>
+                            <div class="form-group">
+                                <textarea class="form-control" rows="20" id="ncontent" placeholder="新记事/任务"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-primary" id="changenote">提交</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        //调用函数，初始化表格  
+        initTable();  
+        //根据窗口调整表格高度
+        $(window).resize(function () {
+            $('#mytab').bootstrapTable('resetView', {
+                height: tableHeight()
+            })
+        });
+        });
+        function initTable() {  
+        //先销毁表格  
+        $('#mytab').bootstrapTable('destroy');  
+        $('#mytab').bootstrapTable({
+
+            clickToSelect: true,
+            url: "api/note/list",//数据源
+            dataField: "rows",//服务端返回数据键值 就是说记录放的键值是rows，分页时使用总记录数的键值为total
+            height: tableHeight(),//高度调整
+            search: true,//是否搜索
+            pagination: true,//是否分页
+            pageSize: 10,//单页记录数
+            pageList: [10],//分页步进值
+            sidePagination: "client",//客户端分页
+            contentType: "application/x-www-form-urlencoded",//请求数据内容格式 默认是 application/json 自己根据格式自行服务端处理
+            dataType: "json",//期待返回数据类型
+            method: "post",//请求方式
+            searchAlign: "right",//查询框对齐方式
+            queryParamsType: "undefined",//查询参数组织方式
+            // queryParams: function getParams(params) {
+            //     //params obj
+            //     params.other = "otherInfo";
+            //     return params;
+            // },
+
+            searchOnEnterKey: true,//回车搜索
+            showRefresh: true,//刷新按钮
+            showColumns: true,//列选择按钮
+            buttonsAlign: "left",//按钮对齐方式
+            toolbar: "#toolbar",//指定工具栏
+            toolbarAlign: "right",//工具栏对齐方式
+            columns: [
+                {
+                    title: "编号",//标题
+                    field: "id",//键名
+                    sortable: true,//是否可排序
+                    order: "desc",//默认排序方式
+                    visible: false
+                },
+                {
+                    title: "创建者",//标题
+                    field: "cid",//键名
+                    sortable: true,//是否可排序
+                    order: "desc"//默认排序方式
+                },
+                {
+                    field: "content",
+                    title: "内容",
+                    align: "center",
+                    titleTooltip: "this is name",
+                    edit: true
+                },
+                {
+                    title: "创建时间",//标题
+                    field: "datetime",//键名
+                    formatter: function (datetime) {
+                        return timeFormatter(datetime);
+                    },
+                    sortable: true,//是否可排序
+                    order: "desc"//默认排序方式
+                },
+                {
+                    title: "提醒时间",//标题
+                    field: "reminddatetime",//键名
+                    formatter: function (remindtime) {
+                        return timeFormatter(remindtime);
+                    },
+                    sortable: true,//是否可排序
+                    order: "desc"//默认排序方式
+                },
+                {
+                    field: "operate",
+                    title: "操作",
+                    align: "center",
+                    events: "operateEvents",
+                    formatter: operateFormatter
+                }
+            ],
+            locale: "zh-CN", //中文支持
+            detailView: false //是否显示详情折叠
+        });
+    }
+    
+
+    function tableHeight() {
+        return $(window).height() - 100;
+    }
+
+    /**
+     * 列的格式化函数 在数据从服务端返回装载前进行处理
+     * @param  {[type]} value [description]
+     * @param  {[type]} row   [description]
+     * @param  {[type]} index [description]
+     * @return {[type]}       [description]
+     */
+    function operateFormatter(value, row, index) {
+
+        return ['<button type="button" class="edit btn btn-primary  btn-sm" data-toggle="modal" data-target="#addModal" style="margin-right:15px;">修改</button>', '<button type="button" class="delete btn btn-primary  btn-sm"  style="margin-right:15px;">删除</button>',].join('');
+    }
+
+    window.operateEvents = {
+        'click .edit': function (e, value, row, index) {
+            /*alert('You click like action, row: ' + JSON.stringify(row));*/
+            $("#ncontent").val(row.content);
+            $("#nid").val(row.id);
+            // $("#nemail").val(row.email);
+        },
+        'click .delete': function (e, value, row, index) {
+            $.ajax({
+                url: 'api/note/delete',
+                type: 'post',
+                data: {
+                    "id": row.id
+                },
+                dataType: 'json',
+                success: function (data) {
+                    alert(errorcode[data.code]);
+                    if (data.code == 1000) {
+                        $("#mytab").bootstrapTable('remove', {
+                            field: 'id',
+                            values: [row.id]
+                        });
+                    }
+                    if (data.code == 1001) {
+                        window.location.href = "login.html";
+                    }
+                },
+                error: function (data) {
+                    alert("提交失败");
+                }
+            });
+        }
+    };
+    $("#changenote").click(function () {
+        $('#addModal').modal('hide');
+        var newid = $("#nid").val();
+        var ncontent = $("#ncontent").val();
+        $.ajax({
+            type: "post",
+            url: "api/note/change",
+            data: {
+                "id": newid,
+                "content": ncontent
+            },
+            dataType: "json",
+            success: function (data) {
+                alert(errorcode[data.code]);
+                if (data.code == 1000) {
+                    initTable();
+                }
+                if (data.code == 1001) {
+                    window.location.href = "login.html";
+                }
+            },
+            error: function () {
+                alert("提交失败！");
+            }
+        });
+    });
+</script>
+</body>
+</html>

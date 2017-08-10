@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>person</title>
+</head>
+<body style="padding-top: 50px ;">
+<div class="container">
+    <div class="col-md-10">
+        <table class="table table-bordered table-hover">
+            <thead>
+            <tr>
+                <th>旧密码</th>
+                <th>新密码</th>
+                <th>密码确认</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><input type="password" name="oldpassword" id="oldpassword" required="required"></td>
+                <td><input type="password" name="newpassword1" id="newpassword1" required="required"></td>
+                <td style="width:350px">
+                    <input type="password" name="newpassword2" id="newpassword2" required="required"
+                           onkeyup="checkPassword()"> &nbsp <span id="tishi"></span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div style="text-align:center;">
+            <button type="button" class="btn btn-default btn-lg" id="changepwd">修改密码</button>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $("#changepwd").click(function () {
+        $.ajax({
+            url: 'api/user/changepassword',
+            type: 'post',
+            dataType: 'json',
+            data: {
+                'oldpassword': $("#oldpassword").val(),
+                'newpassword': $("#newpassword1").val()
+            },
+            success: function (data) {
+                alert(errorcode[data.code]);
+                if (data.code == 1001) {
+                    window.location.href = "login.html";
+                }
+            },
+            error: function (data) {
+                alert("提交失败");
+            }
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.twork.dao.U2uChatRecordMapper">
+  <resultMap id="BaseResultMap" type="com.twork.pojo.U2uChatRecord">
+    <id column="sid" jdbcType="INTEGER" property="sid" />
+    <id column="rid" jdbcType="INTEGER" property="rid" />
+    <id column="datetime" jdbcType="TIMESTAMP" property="datetime" />
+    <result column="content" jdbcType="CHAR" property="content" />
+    <result column="receipt" jdbcType="BIT" property="receipt" />
+    <result column="read" jdbcType="BIT" property="read" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    delete from `u2u_chat_record`
+    where `sid` = #{sid,jdbcType=INTEGER}
+      and `rid` = #{rid,jdbcType=INTEGER}
+      and `datetime` = #{datetime,jdbcType=TIMESTAMP}
+  </delete>
+  <insert id="insert" parameterType="com.twork.pojo.U2uChatRecord">
+    insert into `u2u_chat_record` (`sid`, `rid`
+    <if test="datetime != null">, `datetime`</if>
+    , `content`
+    <if test="receipt != null">, `receipt`</if>
+    <if test="read != null">, `read`</if>
+    )
+    values (#{sid,jdbcType=INTEGER}, #{rid,jdbcType=INTEGER}
+    <if test="datetime != null">, #{datetime,jdbcType=TIMESTAMP}</if>
+    , #{content,jdbcType=CHAR}
+    <if test="receipt != null">, #{receipt,jdbcType=BIT}</if>
+    <if test="read != null">, #{read,jdbcType=BIT}</if>
+    )
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.twork.pojo.U2uChatRecord">
+    update `u2u_chat_record`
+    set `content` = #{content,jdbcType=CHAR},
+      `receipt` = #{receipt,jdbcType=BIT},
+      `read` = #{read,jdbcType=BIT}
+    where `sid` = #{sid,jdbcType=INTEGER}
+      and `rid` = #{rid,jdbcType=INTEGER}
+      and `datetime` = #{datetime,jdbcType=TIMESTAMP}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="map" resultMap="BaseResultMap">
+    select `sid`, `rid`, `datetime`, `content`, `receipt`, `read`
+    from `u2u_chat_record`
+    where `sid` = #{sid,jdbcType=INTEGER}
+      and `rid` = #{rid,jdbcType=INTEGER}
+      and `datetime` = #{datetime,jdbcType=TIMESTAMP}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select `sid`, `rid`, `datetime`, `content`, `receipt`, `read`
+    from `u2u_chat_record`
+  </select>
+  <select id="selectByUid" resultMap="BaseResultMap" parameterType="map" >
+    (select `sid`, `rid`, `datetime`, `content`, `receipt`, `read`
+    from `u2u_chat_record`
+    where `rid` = #{rid,jdbcType=INTEGER} and `sid` = #{sid,jdbcType=INTEGER}
+    order by `datetime`)
+    union
+    (select `sid`, `rid`, `datetime`, `content`, `receipt`, `read`
+     from `u2u_chat_record`
+     where `sid` = #{rid,jdbcType=INTEGER} and `rid` = #{sid,jdbcType=INTEGER}
+     order by `datetime`)
+  </select>
+  <select id="offLineRecord" resultMap="BaseResultMap" parameterType="map" >
+  select `sid`, `rid`, `datetime`, `content`, `receipt`, `read`
+  from `u2u_chat_record`
+  where `rid` = #{rid,jdbcType=INTEGER}
+  and `datetime` > #{lastonlinedatetime,jdbcType=TIMESTAMP}
+    order by `datetime`
+  </select>
+
+</mapper>

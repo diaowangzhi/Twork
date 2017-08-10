@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Bootstrap-Table</title>
+</head>
+<body style="padding-top: 50px">
+
+<div class="container">
+    <div class="col-md-10">
+        <table id="mytab" class="table table-hover"></table>
+        <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                            &times;
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">权限审批</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form role="form" action="">
+                            <div class="form-group">
+                                账号：<input type="text" class="form-control" id="nid" readonly>
+                            </div>
+                            <div class="form-group">
+                                昵称：<input type="text" class="form-control" id="nname" readonly>
+                            </div>
+                            <div class="form-group">
+                                权限：
+                                <select id="nlevel" class="form-control">
+                                    <option value="1">受限用户</option>
+                                    <option value="2">普通用户</option>
+                                    <option value="3">高级用户</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary" id="approvelevel">提交</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<script type="text/javascript">
+    function tableHeight() {
+        return $(window).height() - 100;
+    }
+
+    function operateFormatter(value, row, index) {
+
+        return ['<button type="button" class="edit btn btn-info  btn-sm" data-toggle="modal" data-target="#addModal" style="margin-right:15px;">权限审批</button>'].join();
+    }
+
+    window.operateEvents = {
+        'click .edit': function (e, value, row, index) {
+            /*alert('You click like action, row: ' + JSON.stringify(row));*/
+            $("#nid").val(row.uid);
+            $("#nname").val(row.name);
+        }
+    };
+
+
+    function initTable() {
+        //先销毁表格  
+        $('#mytab').bootstrapTable('destroy');
+        //初始化表格,动态从服务器加载数据  
+        $('#mytab').bootstrapTable({
+            clickToSelect: true,
+            url: "api/manager/listnoncheckeduser",//数据源
+            dataField: "rows",//服务端返回数据键值 就是说记录放的键值是rows，分页时使用总记录数的键值为total
+            height: tableHeight(),//高度调整
+            search: true,//是否搜索
+            striped: true,
+            pagination: true,//是否分页
+            pageSize: 10,//单页记录数
+            pageList: [10, 20],//分页步进值
+            sidePagination: "client",//客户端分页
+            contentType: "application/x-www-form-urlencoded",//请求数据内容格式 默认是 application/json 自己根据格式自行服务端处理
+            dataType: "json",//期待返回数据类型
+            method: "post",//请求方式
+            searchAlign: "right",//查询框对齐方式
+            queryParamsType: "undefined",//查询参数组织方式
+
+            searchOnEnterKey: true,//回车搜索
+            showRefresh: true,//刷新按钮
+            showColumns: true,//列选择按钮
+            buttonsAlign: "left",//按钮对齐方式
+            toolbar: "#toolbar",//指定工具栏
+            toolbarAlign: "right",//工具栏对齐方式
+            columns: [
+
+                {
+                    title: "账号",//标题
+                    field: "uid",//键名
+                    sortable: true,//是否可排序
+                    order: "desc",//默认排序方式
+                    searchable: true
+                },
+                {
+                    field: "name",
+                    title: "昵称",
+                    align: "center",
+                    titleTooltip: "this is name",
+                    searchable: false
+                },
+                {
+                    field: "datetime",
+                    title: "注册时间",
+                    formatter: function (datetime) {
+                        return timeFormatter(datetime);
+                    },
+                    align: "center",
+                    searchable: false
+                },
+                {
+                    field: "level",
+                    title: "权限等级",
+                    align: "center",
+                    searchable: false,
+                    formatter: function (value, row, index) {
+                        if (row['level'] == 1) {
+                            return '受限用户';
+                        }
+                        else if (row['level'] == 2) {
+                            return '普通用户';
+                        }
+                        else if (row['level'] == 3) {
+                            return '高级用户';
+                        }
+                        else
+                            return '管理员';
+                    }
+                },
+                {
+                    field: "operate",
+                    title: "操作",
+                    align: "center",
+                    events: "operateEvents",
+                    formatter: operateFormatter
+                }
+
+            ],
+            /* onClickRow: function(row, $element) {
+             //$element是当前tr的jquery对象
+             $element.css("background-color", "green");
+             },//单击row事件*/
+            locale: "zh-CN", //中文支持
+            detailView: false //是否显示详情折叠
+        });
+    }
+
+    $(document).ready(function () {
+        //调用函数，初始化表格
+        initTable();
+        //根据窗口调整表格高度
+        $(window).resize(function () {
+            $('#mytab').bootstrapTable('resetView', {
+                height: tableHeight()
+            })
+        });
+        // ajax提交方式
+        $("#approvelevel").click(function () {
+            $('#addModal').modal('hide');
+            var nid = $("#nid").val();
+            var nlevel = $("#nlevel").val();
+            $.ajax({
+                type: "post",
+                url: "api/manager/changelevel",
+                data: {
+                    "uid": nid,
+                    "level": nlevel
+                },
+                dataType: "json",
+                success: function (data) {
+                    alert(errorcode[data.code]);
+                    if (data.code == 1000) {
+                        initTable();
+                    }
+                    if (data.code == 1001) {
+                        window.location.href = "login.html";
+                    }
+                },
+                error: function () {
+                    alert("提交失败！");
+                }
+            });
+        });
+        //当点击查询按钮的时候执行
+        // $("#search").bind("click", initTable);
+    });
+</script>
+</body>
+</html>
