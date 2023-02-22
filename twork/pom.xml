@@ -51,7 +51,7 @@
         <jackson-core.version>2.8.9</jackson-core.version>
         <jackson-databind.version>2.8.9</jackson-databind.version>
 
-        <commons-fileupload.version>1.3.3</commons-fileupload.version>
+        <commons-fileupload.version>1.5</commons-fileupload.version>
         <commons-io.version>2.5</commons-io.version>
         <commons-codec.version>1.10</commons-codec.version>
 
